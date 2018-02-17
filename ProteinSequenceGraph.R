@@ -75,22 +75,40 @@ sequence <- fetchSequence(accession)
 
 sequenceDframe <- sequence2Dataframe(sequence)
 
-p <- ggplot(sequenceDframe, aes(col, row, label = AA)) + geom_text()
-p <- p + scale_y_continuous(trans = "reverse")
+p <- ggplot()
 p <- p + ggtitle(accession)
+p <- p + scale_y_continuous(trans = "reverse")
 
-psites <- c(37,88,3,678)
-psiteDframe <- sequenceDframe[ sequenceDframe$position %in% psites  ,]
-
-p <- p + geom_text(data =  psiteDframe,  aes(col, row, label = AA), inherit.aes = FALSE, colour = "red")
-
-peptides <- data.frame(peptideSequence = c("Test","Test"), start = c(67,360), stop = c(80, 375))
-peptides <- ddply(peptides, .(), mutate, positions = start:stop )
-peptidePosition <- apply(peptides,2,1:2)
-peptidesDframe <- sequenceDframe[ sequenceDframe$position %in% psites  ,]
- 
+cleavageSites <- sequenceDframe[ sequenceDframe$position %in% gregexpr(pattern = "[RK][^P]", sequence )[[1]],]
+p <- p + geom_tile(data =  cleavageSites,  aes(col, row), inherit.aes = FALSE, fill = "green")
 p
 
+p <- p + geom_text( data = sequenceDframe, aes(col, row, label = AA)) 
+p
+
+
+# psites <- c(37,88,3,678)
+# psiteDframe <- sequenceDframe[ sequenceDframe$position %in% psites  ,]
+# 
+# p <- p + geom_text(data =  psiteDframe,  aes(col, row, label = AA), inherit.aes = FALSE, colour = "red")
+
+peptides <- data.frame(peptideSequence = c("GLIDEVNQDFTNR","Test2"), start = c(72,360), stop = c(84, 375))
+peptides <- ddply(peptides, .(peptideSequence), transform, positions = start:stop )
+peptidesDframe <- sequenceDframe[ sequenceDframe$position %in% peptides$positions  ,]
+ 
+p <- p + geom_text(data =  peptidesDframe,  aes(col, row, label = AA), inherit.aes = FALSE, colour = "green")
+p <- p + geom_text(data =  cleavageSites,  aes(col, row, label = AA), inherit.aes = FALSE, colour = "black")
+p
+
+
+cleavageSites <- sequenceDframe[ sequenceDframe$position %in% gregexpr(pattern = "[RK][^P]", sequence )[[1]],]
+p <- p + geom_text(data =  cleavageSites,  aes(col, row, label = AA), inherit.aes = FALSE, colour = "red")
+p
+
+
+
+regmatches(sequence,gregexpr(pattern = "[N][G]", sequence ))
+regmatches(sequence,gregexpr(pattern = "[RK][EQ]", sequence ))
 
 
 
